@@ -13,14 +13,18 @@ function App() {
     }
   };
 
-  const handleHistoryClick = (q: string) => {
+  const historyClicked = (q: string) => {
     setActiveQuery(q);
     setQuery(q);
   };
 
+  const clearHistory = () => {
+    setHistory([]);
+  };
+
   return (
     <>
-      <div className="min-h-screen bg-[#ebffd8] p-6">
+      <div className="min-h-screen bg-[#ebefff] p-6">
         <div className="max-w-6xl mx-auto bg-[#f7f7f7] rounded-2xl shadow-lg p-6">
           <div className="text-3xl font-bold mb-6 text-center text-[#8dbcc7]">
             Ask about your insurance data
@@ -40,23 +44,32 @@ function App() {
               Send your query
             </button>
           </div>
-          <div className="bg-[#ebefff] p-4 h-80 rounded-lg shadow-inner mb-6">
+          <div className="bg-[#f3f3f3] p-4 h-80 rounded-lg shadow-inner mb-6">
             <div>Tu ce ic grafovi</div>
-            {activeQuery && <div>Trenutni query: {activeQuery}</div>}
+            {activeQuery && <div>Current query: {activeQuery}</div>}
           </div>
-          <div className="text-2xl font-bold mb-6 text-center text-[#8dbcc7]">
-            Query history
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="text-2xl font-bold text-[#8dbcc7]">
+              Query history
+            </div>
+            <button
+              onClick={clearHistory}
+              className="text-xl text-red-500 hover:text-red-600 cursor-pointer transition"
+            >
+              (clear)
+            </button>
           </div>
           <div className="space-y-2">
-            {history.map((q, index) => (
-              <div
-                key={index}
-                onClick={() => handleHistoryClick(q)}
-                className="bg-[#f9f9f9] p-2 rounded shadow text-[#333] cursor-pointer hover:bg-[#f0f0f0] transition"
-              >
-                {q}
-              </div>
-            ))}
+            {history.length > 0 &&
+              history.map((q, index) => (
+                <div
+                  key={index}
+                  onClick={() => historyClicked(q)}
+                  className="bg-[#f9f9f9] p-2 rounded shadow text-[#333] cursor-pointer hover:bg-[#f0f0f0] transition"
+                >
+                  {q}
+                </div>
+              ))}
           </div>
         </div>
       </div>
