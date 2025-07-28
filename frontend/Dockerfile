@@ -1,5 +1,5 @@
 # Use a Node.js base image for building the React app
-FROM node:18-alpine as build
+FROM node:18-alpine as builder
 
 # Set the working directory
 WORKDIR /app
@@ -20,7 +20,7 @@ RUN npm run build
 FROM nginx:alpine
 
 # Copy the built React app from the build stage to Nginx's public directory
-COPY --from=build /app/build /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expose port 80 (Nginx default)
 EXPOSE 80
