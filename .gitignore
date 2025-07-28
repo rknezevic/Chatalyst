@@ -1,0 +1,38 @@
+# IntelliJ IDEA specific files
+.idea/
+*.iml
+*.iws
+out/
+
+# Build output
+/target/
+/build/
+
+# Maven specific
+.mvn/
+!**/src/main/**/.mvn/wrapper/maven-wrapper.jar
+
+# Gradle specific
+.gradle/
+/build/
+**/build/
+
+# Logs
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.class
+*.swp
+*.swo
+*.tmp
+*.bak
+
+# Other common IDEs (optional)
+.vscode/
+*.classpath
+*.project
+*.settings/
