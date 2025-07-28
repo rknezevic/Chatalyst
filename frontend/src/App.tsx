@@ -1,9 +1,22 @@
 import { useState } from "react";
+import type { DataEntry } from "./types";
+import { ChartView } from "./components/ChartView";
 
 function App() {
   const [query, setQuery] = useState<string>("");
   const [activeQuery, setActiveQuery] = useState<string>("");
   const [history, setHistory] = useState<string[]>([]);
+  const [data, setData] = useState<DataEntry[] | null>(null);
+
+  const handleShow = async () => {
+    try {
+      const response = await fetch("http://localhost:3001/salaries");
+      const json = await response.json();
+      setData(json);
+    } catch (err) {
+      console.error("Error getting data:", err);
+    }
+  };
 
   const sendQuery = () => {
     console.log(query);
@@ -11,6 +24,7 @@ function App() {
     {
       query && setHistory((prev) => [query, ...prev]);
     }
+    handleShow();
   };
 
   const historyClicked = (q: string) => {
@@ -44,9 +58,14 @@ function App() {
               Send your query
             </button>
           </div>
-          <div className="bg-[#f3f3f3] p-4 h-80 rounded-lg shadow-inner mb-6">
-            <div>Tu ce ic grafovi</div>
+          <div className="bg-[#f3f3f3] p-4 rounded-lg shadow-inner mb-6">
             {activeQuery && <div>Current query: {activeQuery}</div>}
+            {data && (
+              <>
+                <ChartView data={data} type="bar" />
+                <ChartView data={data} type="pie" />
+              </>
+            )}
           </div>
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="text-2xl font-bold text-[#8dbcc7]">
