@@ -1,32 +1,13 @@
 version: "3.8"
 
 services:
-  postgres:
-    image: postgres:15
-    container_name: postgres-db
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: insurance
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
   backend:
     build:
-      context: ./backend
+      context: ./backend/Chatalyst
       dockerfile: Dockerfile
     container_name: spring-backend
     ports:
       - "8080:8080"
-    depends_on:
-      - postgres
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/insurance
-      SPRING_DATASOURCE_USERNAME: user
-      SPRING_DATASOURCE_PASSWORD: password
-
   frontend:
     build:
       context: ./frontend
@@ -36,6 +17,3 @@ services:
       - "3000:80"
     depends_on:
       - backend
-
-volumes:
-  postgres_data:
