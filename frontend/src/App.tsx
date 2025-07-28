@@ -7,24 +7,26 @@ function App() {
   const [activeQuery, setActiveQuery] = useState<string>("");
   const [history, setHistory] = useState<string[]>([]);
   const [data, setData] = useState<DataEntry[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleShow = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch("http://localhost:3001/salaries");
       const json = await response.json();
       setData(json);
     } catch (err) {
       console.error("Error getting data:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const sendQuery = () => {
-    console.log(query);
+  const sendQuery = async () => {
+    if (!query) return;
     setActiveQuery(query);
-    {
-      query && setHistory((prev) => [query, ...prev]);
-    }
-    handleShow();
+    setHistory((prev) => [query, ...prev]);
+    await handleShow();
   };
 
   const historyClicked = (q: string) => {
@@ -59,11 +61,25 @@ function App() {
             </button>
           </div>
           <div className="bg-[#f3f3f3] p-4 rounded-lg shadow-inner mb-6">
-            {activeQuery && <div>Current query: {activeQuery}</div>}
-            {data && (
+            {isLoading ? (
+              <div className="text-xl text-center">Loading...</div>
+            ) : (
               <>
-                <ChartView data={data} type="bar" />
-                <ChartView data={data} type="pie" />
+                {activeQuery && (
+                  <div className="text-xl text-center">
+                    Current query: {activeQuery}
+                  </div>
+                )}
+                {data ? (
+                  <>
+                    <ChartView data={data} type="bar" />
+                    <ChartView data={data} type="pie" />
+                  </>
+                ) : (
+                  <div className="text-xl">
+                    Results of your query will be shown here.
+                  </div>
+                )}
               </>
             )}
           </div>
