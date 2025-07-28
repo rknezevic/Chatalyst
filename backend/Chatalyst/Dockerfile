@@ -1,7 +1,7 @@
-FROM maven:3.8.5-openjdk-21 AS builder
+FROM maven:3.8.8-eclipse-temurin-21-alpine AS builder
 WORKDIR /app
 COPY pom.xml .
-COPY src ./Chatalyst/src
+COPY src ./src
 RUN mvn clean package -DskipTests
 
 FROM openjdk:21-jdk-slim
