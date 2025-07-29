@@ -1,4 +1,4 @@
-package com.example.Chatalyst.models;
+package com.example.Chatalyst.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;
