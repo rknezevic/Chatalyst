@@ -12,7 +12,8 @@ public interface AddressService {
 
     Address extendAddress(AddressDTO dto);
 
-    String returnAddress(AddressDTO dto);
+
+    AddressDTO getById(Long id);
 
 }
 

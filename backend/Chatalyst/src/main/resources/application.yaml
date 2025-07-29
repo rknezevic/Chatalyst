@@ -29,7 +29,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
@@ -41,4 +41,9 @@ spring:
       write-dates-as-timestamps: false
 
 server:
-  port: 8500
+  port: 8080
+
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor: DEBUG
+

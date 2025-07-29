@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.example.Chatalyst.repository.AddressRepository;
 
 import java.util.List;
+import java.util.Optional;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -39,8 +41,14 @@ public class AddressServiceImpl implements AddressService {
         return null;
     }
 
+
+
     @Override
-    public String returnAddress(AddressDTO dto) {
-        return "";
+    public AddressDTO getById(Long id) {
+        Optional<Address> addressOptional = addressRepository.findById(id);
+        if (addressOptional.isEmpty()) return null;
+        Address address = addressOptional.get();
+
+        return AddressDTO.toAddressDTO(address);
     }
 }
