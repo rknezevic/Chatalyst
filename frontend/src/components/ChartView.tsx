@@ -64,8 +64,8 @@ export const ChartView = ({ data, type }: ChartViewProps) => {
             responsive: true,
             elements: {
               arc: {
-                borderWidth: 1, // Thickness of border
-                borderColor: "#f7f7f7", // Light gray (or any color you want)
+                borderWidth: 1,
+                borderColor: "#f7f7f7",
               },
             },
           }}
