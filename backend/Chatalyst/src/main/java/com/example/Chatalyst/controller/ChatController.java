@@ -69,17 +69,12 @@ import java.util.UUID;
 
         @SneakyThrows
         @PostMapping("/chat-with-memory")
-        public ChatWithDataResponse chatWithMemory(@RequestBody ChatWithMemoryRequest body, HttpSession session) {
-            if (body.conversationId == null || body.conversationId.isBlank())  {
-                body.conversationId = (String) session.getAttribute("conversationId");
+        public ChatWithDataResponse chatWithMemory(@RequestBody ChatWithMemoryRequest body) {
 
-                if (body.conversationId == null)  {
-                    body.setConversationId(UUID.randomUUID().toString());
-                    session.setAttribute("conversationId", body.conversationId);
-                }
-            } else {
-                session.setAttribute("conversationId", body.conversationId);
+            if (body.conversationId == null)  {
+                body.setConversationId(UUID.randomUUID().toString());
             }
+
 
             chatMemory.add(body.conversationId, new UserMessage(body.input));
             LLMREsponse respone = chatClient.prompt()
@@ -92,7 +87,7 @@ import java.util.UUID;
                     .system("""
 Vi ste stručnjak za analizu podataka pomoću SQL-a. Vaša glavna funkcija je prevesti pitanja korisnika iz prirodnog jezika u precizne i ispravne SQL SELECT upite. Odgovore piši na hrvatskom.
 
-Cilj vam je uvijek generirati jedan točan i izvršiv SQL SELECT upit na temelju korisničkog pitanja i dane sheme baze podataka.
+Cilj vam je uvijek generirati jedan točan i izvršiv SQL SELECT upit na temelju korisničkog pitanja i dane sheme baze podataka. 
 
 Važno:
 - Smijete koristiti isključivo SELECT upite. Nikada nemojte koristiti INSERT, UPDATE, DELETE, DROP ili bilo koji drugi upit koji mijenja podatke u bazi.
@@ -149,6 +144,7 @@ Za svaki SQL upit koji generirate, predložite jedan ili više prikladnih način
 
 Na kraju svakog upita, dodajte prijedlog vizualizacije na hrvatskom jeziku, npr.:
 Predložena vizualizacija: stupčasti grafikon s brojem korisnika po gradu.
+
 """)
 
                     .advisors(new SimpleLoggerAdvisor())
@@ -160,7 +156,7 @@ Predložena vizualizacija: stupčasti grafikon s brojem korisnika po gradu.
             String sql = respone.getSqlQuery();
             List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
             if (!sql.trim().toLowerCase().startsWith("select")) throw new IllegalArgumentException("Dozvoljeni su samo SELECT upiti.");
-            return new ChatWithDataResponse(respone, result);
+            return new ChatWithDataResponse(respone, result, body.conversationId);
 
         }
 
@@ -170,6 +166,7 @@ Predložena vizualizacija: stupčasti grafikon s brojem korisnika po gradu.
         public static class ChatWithDataResponse{
             private LLMREsponse llmrEsponse;
             private List<Map<String, Object>> data;
+            private String conversationId;
     }
 
 
@@ -182,6 +179,8 @@ Predložena vizualizacija: stupčasti grafikon s brojem korisnika po gradu.
             private String clarification;
             @JsonProperty("chartType")
             private GraphType graph;
+
+
 
         }
 
