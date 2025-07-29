@@ -1,12 +1,12 @@
 import { useState } from "react";
-import type { DataEntry } from "./types";
+import type { DataEntry, HistoryEntry } from "./types";
 import { ChartView } from "./components/ChartView";
 import { TableView } from "./components/TableView";
 
 function App() {
   const [query, setQuery] = useState<string>("");
   const [activeQuery, setActiveQuery] = useState<string>("");
-  const [history, setHistory] = useState<string[]>([]);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [data, setData] = useState<DataEntry[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,14 +25,20 @@ function App() {
 
   const sendQuery = async () => {
     if (!query) return;
+    const now = new Date();
+    const entry: HistoryEntry = {
+      query,
+      time: now,
+    };
     setActiveQuery(query);
-    setHistory((prev) => [query, ...prev]);
+    setHistory((prev) => [entry, ...prev]);
     await handleShow();
   };
 
-  const historyClicked = (q: string) => {
+  const historyClicked = async (q: string) => {
     setActiveQuery(q);
     setQuery(q);
+    await handleShow();
   };
 
   const clearHistory = () => {
@@ -105,13 +111,16 @@ function App() {
           </div>
           <div className="space-y-2">
             {history.length > 0 &&
-              history.map((q, index) => (
+              history.map((entry, index) => (
                 <div
                   key={index}
-                  onClick={() => historyClicked(q)}
-                  className="bg-[#f9f9f9] p-2 rounded shadow text-[#333] cursor-pointer hover:bg-[#f0f0f0] transition"
+                  onClick={() => historyClicked(entry.query)}
+                  className="flex justify-between bg-[#f9f9f9] p-2 rounded shadow text-[#333] cursor-pointer hover:bg-[#f0f0f0] transition"
                 >
-                  {q}
+                  <div className="font-medium">{entry.query}</div>
+                  <div className="text-sm text-gray-500 whitespace-nowrap">
+                    {new Date(entry.time).toLocaleString()}
+                  </div>
                 </div>
               ))}
           </div>
