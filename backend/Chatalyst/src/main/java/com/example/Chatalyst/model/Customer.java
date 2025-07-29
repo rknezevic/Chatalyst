@@ -33,6 +33,6 @@ public class Customer {
 
     @ManyToOne(fetch = FetchType.EAGER, cascade = { CascadeType.DETACH })
     @JoinColumn(name = "adress_id")
-    private Adress adress;
+    private Address adress;
 
 }
