@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { DataEntry } from "./types";
 import { ChartView } from "./components/ChartView";
+import { TableView } from "./components/TableView";
 
 function App() {
   const [query, setQuery] = useState<string>("");
@@ -12,7 +13,7 @@ function App() {
   const handleShow = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("http://localhost:3001/salaries");
+      const response = await fetch("http://localhost:3000/salaries");
       const json = await response.json();
       setData(json);
     } catch (err) {
@@ -68,12 +69,20 @@ function App() {
                 {activeQuery && (
                   <div className="text-xl text-center">
                     Current query: {activeQuery}
+                    <div className="border-t my-6 border-gray-300" />
                   </div>
                 )}
                 {data ? (
                   <>
+                    <div>Response from AI: </div>
+                    <div className="border-t my-6 border-gray-300" />
+                    <TableView data={data} />
+                    <div className="border-t my-6 border-gray-300" />
                     <ChartView data={data} type="bar" />
+                    <div className="border-t my-6 border-gray-300" />
                     <ChartView data={data} type="pie" />
+                    <div className="border-t my-6 border-gray-300" />
+                    <ChartView data={data} type="line" />
                   </>
                 ) : (
                   <div className="text-xl">
