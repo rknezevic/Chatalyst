@@ -2,6 +2,8 @@ package com.example.Chatalyst.controller;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpSession;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -14,6 +16,7 @@ import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryReposito
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +26,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 import java.rmi.server.UID;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 
@@ -35,7 +40,8 @@ import java.util.UUID;
 
         private final ObjectMapper objectMapper;
 
-
+        @Autowired
+        private JdbcTemplate jdbcTemplate;
 
         public ChatController(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, ObjectMapper objectMapper) {
             this.chatClient = chatClientBuilder.build();
@@ -63,8 +69,18 @@ import java.util.UUID;
 
         @SneakyThrows
         @PostMapping("/chat-with-memory")
-        public LLMREsponse chatWithMemory(@RequestBody ChatWithMemoryRequest body) {
-            if (body.conversationId == null) body.setConversationId(UUID.randomUUID().toString());
+        public ChatWithDataResponse chatWithMemory(@RequestBody ChatWithMemoryRequest body, HttpSession session) {
+            if (body.conversationId == null || body.conversationId.isBlank())  {
+                body.conversationId = (String) session.getAttribute("conversationId");
+
+                if (body.conversationId == null)  {
+                    body.setConversationId(UUID.randomUUID().toString());
+                    session.setAttribute("conversationId", body.conversationId);
+                }
+            } else {
+                session.setAttribute("conversationId", body.conversationId);
+            }
+
             chatMemory.add(body.conversationId, new UserMessage(body.input));
             LLMREsponse respone = chatClient.prompt()
                     .advisors(
@@ -100,7 +116,7 @@ CREATE TABLE osam_ljudi_sedam_laptopa.customerdbo (
 );
 
 Druga tablica (addresses):
-CREATE TABLE osam_ljudi_sedam_laptopa.address_dbo (
+CREATE TABLE osam_ljudi_sedam_laptopa.addressdbo (
     address_id float4 NULL,
     latitude float4 NULL,
     longitude float4 NULL,
@@ -140,9 +156,21 @@ Predložena vizualizacija: stupčasti grafikon s brojem korisnika po gradu.
                     .call()
                     .entity(LLMREsponse.class);
             chatMemory.add(body.conversationId, new AssistantMessage(objectMapper.writeValueAsString(respone)));
-            return respone;
+
+            String sql = respone.getSqlQuery();
+            List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
+            if (!sql.trim().toLowerCase().startsWith("select")) throw new IllegalArgumentException("Dozvoljeni su samo SELECT upiti.");
+            return new ChatWithDataResponse(respone, result);
 
         }
+
+        @Getter
+        @Setter
+        @AllArgsConstructor
+        public static class ChatWithDataResponse{
+            private LLMREsponse llmrEsponse;
+            private List<Map<String, Object>> data;
+    }
 
 
         @Getter
