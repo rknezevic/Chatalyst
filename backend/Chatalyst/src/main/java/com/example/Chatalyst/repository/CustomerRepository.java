@@ -1,4 +1,4 @@
-package repository;
+package com.example.Chatalyst.repository;
 
 import com.example.Chatalyst.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;

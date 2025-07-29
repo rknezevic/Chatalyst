@@ -6,7 +6,7 @@ import com.example.Chatalyst.service.AddressService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import repository.AddressRepository;
+import com.example.Chatalyst.repository.AddressRepository;
 
 import java.util.List;
 @Service
