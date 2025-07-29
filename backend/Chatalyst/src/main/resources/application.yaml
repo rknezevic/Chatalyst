@@ -11,15 +11,15 @@ spring:
 
     vectorstore:
       pgvector:
-        schema-name: public
+        schema-name: osam_ljudi_sedam_laptopa
         initialize-schema: true
         dimensions: 768
 
-    mistral:
+    mistralai:
       api-key: ${MISTRAL_API_KEY}
       chat:
         options:
-          model: mistral-tiny
+          model: devstral-small-latest
 
   datasource:
     url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_DATABASE}
@@ -29,15 +29,21 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: osam_ljudi_sedam_laptopa
 
   jackson:
     serialization:
       write-dates-as-timestamps: false
 
 server:
-  port: 8500
+  port: 8080
+
+logging:
+  level:
+    org.springframework.ai.chat.client.advisor: DEBUG
+

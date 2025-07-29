@@ -1,30 +1,48 @@
 interface TableViewProps {
-  data: { label: string; value: number }[];
+  data: Record<string, any>[];
 }
 
 export const TableView = ({ data }: TableViewProps) => {
+  const columns = Object.keys(data[0]).filter((key) => key !== "id");
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border border-gray-300 rounded-lg overflow-hidden">
         <thead className="bg-[#a4ccd9] text-gray-800">
           <tr>
-            <th className="py-2 px-4 border-b border-gray-300 text-left">
-              Title
-            </th>
-            <th className="py-2 px-4 border-b border-gray-300 text-right">
-              Value
-            </th>
+            {columns.map((col, colIndex) => (
+              <th
+                key={col}
+                className={`py-2 px-4 border-b border-gray-200 text-left whitespace-nowrap ${
+                  colIndex < columns.length - 1
+                    ? "border-r-2 border-gray-200"
+                    : ""
+                }`}
+              >
+                {col}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>
           {data.map((item, idx) => (
             <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-              <td className="py-2 px-4 border-b border-gray-200">
-                {item.label}
-              </td>
-              <td className="py-2 px-4 border-b border-gray-200 text-right">
-                {item.value}
-              </td>
+              {columns.map((col, colIndex) => (
+                <td
+                  key={col}
+                  className={`py-2 px-4 border-b border-gray-200 whitespace-nowrap ${
+                    colIndex < columns.length - 1
+                      ? "border-r-2 border-gray-200"
+                      : ""
+                  }`}
+                >
+                  {typeof item[col] === "boolean"
+                    ? item[col]
+                      ? "Yes"
+                      : "No"
+                    : item[col]}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>

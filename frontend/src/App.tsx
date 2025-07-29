@@ -1,14 +1,15 @@
 import { useState } from "react";
-import type { DataEntry } from "./types";
+import type { DataEntry, HistoryEntry } from "./types";
 import { ChartView } from "./components/ChartView";
 import { TableView } from "./components/TableView";
 
 function App() {
   const [query, setQuery] = useState<string>("");
   const [activeQuery, setActiveQuery] = useState<string>("");
-  const [history, setHistory] = useState<string[]>([]);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [data, setData] = useState<DataEntry[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [firstQueryInChat, setfirstQueryInChat] = useState(true);
 
   const handleShow = async () => {
     setIsLoading(true);
@@ -25,14 +26,33 @@ function App() {
 
   const sendQuery = async () => {
     if (!query) return;
+    const now = new Date();
+    const entry: HistoryEntry = {
+      query,
+      time: now,
+      data: data,
+      type: "bar",
+    };
     setActiveQuery(query);
-    setHistory((prev) => [query, ...prev]);
+    {
+      firstQueryInChat && setHistory((prev) => [entry, ...prev]);
+    }
+    setfirstQueryInChat(false);
     await handleShow();
   };
 
-  const historyClicked = (q: string) => {
+  const newQuery = async () => {
+    setQuery("");
+    setActiveQuery("");
+    setData(null);
+    setfirstQueryInChat(true);
+  };
+
+  const historyClicked = async (q: string) => {
     setActiveQuery(q);
     setQuery(q);
+    setfirstQueryInChat(false);
+    await handleShow();
   };
 
   const clearHistory = () => {
@@ -46,7 +66,7 @@ function App() {
           <div className="text-3xl font-bold mb-6 text-center text-[#8dbcc7]">
             Ask about your insurance data
           </div>
-          <div className="flex gap-4 mb-4">
+          <div className="flex gap-4 mb-2">
             <input
               type="text"
               placeholder="Your query"
@@ -59,6 +79,14 @@ function App() {
               className="bg-[#a4ccd9] text-white px-4 py-2 rounded-md shadow hover:bg-[#8dbcc7] cursor-pointer transition whitespace-nowrap"
             >
               Send your query
+            </button>
+          </div>
+          <div className="flex justify-center mb-2">
+            <button
+              onClick={newQuery}
+              className="bg-[#a4ccd9] text-white px-16 py-2 rounded-md shadow hover:bg-[#8dbcc7] cursor-pointer transition"
+            >
+              New chat
             </button>
           </div>
           <div className="bg-[#f3f3f3] p-4 rounded-lg shadow-inner mb-6">
@@ -105,13 +133,16 @@ function App() {
           </div>
           <div className="space-y-2">
             {history.length > 0 &&
-              history.map((q, index) => (
+              history.map((entry, index) => (
                 <div
                   key={index}
-                  onClick={() => historyClicked(q)}
-                  className="bg-[#f9f9f9] p-2 rounded shadow text-[#333] cursor-pointer hover:bg-[#f0f0f0] transition"
+                  onClick={() => historyClicked(entry.query)}
+                  className="flex justify-between bg-[#f9f9f9] p-2 rounded shadow text-[#333] cursor-pointer hover:bg-[#f0f0f0] transition"
                 >
-                  {q}
+                  <div className="font-medium">{entry.query}</div>
+                  <div className="text-sm text-gray-500 whitespace-nowrap">
+                    {new Date(entry.time).toLocaleString()}
+                  </div>
                 </div>
               ))}
           </div>
