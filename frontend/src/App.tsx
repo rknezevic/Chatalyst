@@ -9,6 +9,7 @@ function App() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [data, setData] = useState<DataEntry[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [firstQueryInChat, setfirstQueryInChat] = useState(true);
 
   const handleShow = async () => {
     setIsLoading(true);
@@ -29,15 +30,28 @@ function App() {
     const entry: HistoryEntry = {
       query,
       time: now,
+      data: data,
+      type: "bar",
     };
     setActiveQuery(query);
-    setHistory((prev) => [entry, ...prev]);
+    {
+      firstQueryInChat && setHistory((prev) => [entry, ...prev]);
+    }
+    setfirstQueryInChat(false);
     await handleShow();
+  };
+
+  const newQuery = async () => {
+    setQuery("");
+    setActiveQuery("");
+    setData(null);
+    setfirstQueryInChat(true);
   };
 
   const historyClicked = async (q: string) => {
     setActiveQuery(q);
     setQuery(q);
+    setfirstQueryInChat(false);
     await handleShow();
   };
 
@@ -52,7 +66,7 @@ function App() {
           <div className="text-3xl font-bold mb-6 text-center text-[#8dbcc7]">
             Ask about your insurance data
           </div>
-          <div className="flex gap-4 mb-4">
+          <div className="flex gap-4 mb-2">
             <input
               type="text"
               placeholder="Your query"
@@ -65,6 +79,14 @@ function App() {
               className="bg-[#a4ccd9] text-white px-4 py-2 rounded-md shadow hover:bg-[#8dbcc7] cursor-pointer transition whitespace-nowrap"
             >
               Send your query
+            </button>
+          </div>
+          <div className="flex justify-center mb-2">
+            <button
+              onClick={newQuery}
+              className="bg-[#a4ccd9] text-white px-16 py-2 rounded-md shadow hover:bg-[#8dbcc7] cursor-pointer transition"
+            >
+              New chat
             </button>
           </div>
           <div className="bg-[#f3f3f3] p-4 rounded-lg shadow-inner mb-6">
