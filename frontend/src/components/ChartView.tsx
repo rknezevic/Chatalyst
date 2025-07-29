@@ -9,9 +9,8 @@ import {
   LinearScale,
   Tooltip,
   Legend,
-  type ChartType,
 } from "chart.js";
-import type { DataEntry } from "../types";
+import type { DataEntry, ViewType } from "../types";
 
 ChartJS.register(
   ArcElement,
@@ -26,7 +25,7 @@ ChartJS.register(
 
 interface ChartViewProps {
   data: DataEntry[];
-  type: ChartType;
+  type: ViewType;
 }
 
 export const ChartView = ({ data, type }: ChartViewProps) => {
