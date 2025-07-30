@@ -13,6 +13,7 @@ function App() {
   const [convId, setConvId] = useState<string | null>(null);
   const [sqlQuery, setSqlQuery] = useState<string>("");
   const [viewType, setViewType] = useState<ViewType>("TABLE");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const sendQuery = async () => {
     if (!query) return;
@@ -41,6 +42,16 @@ function App() {
       const json = await response.json();
       console.log(json);
 
+      if (!json.data || json.data.length === 0) {
+        setData(null);
+        setSqlQuery("");
+        setErrorMessage(
+          "Ups... dogodila se greška! Pokušajte s nekim drugim upitom."
+        );
+        return;
+      }
+
+      setErrorMessage(null);
       const newEntry: HistoryEntry = {
         query,
         time: new Date(),
@@ -82,6 +93,9 @@ function App() {
       setfirstQueryInChat(false);
     } catch (err) {
       console.error("Error getting data:", err);
+      setErrorMessage(
+        "Ups... dogodila se greška! Pokušajte s nekim drugim upitom."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -106,6 +120,7 @@ function App() {
     setConvId(lastEntry.conversationId);
     setViewType(lastEntry.type);
     setfirstQueryInChat(false);
+    setErrorMessage(null);
   };
 
   useEffect(() => {
@@ -127,9 +142,14 @@ function App() {
           <div className="flex gap-4 mb-2">
             <input
               type="text"
-              placeholder="Vaš upit"
+              placeholder='npr. Daj mi 10 najstarijih korisnika u gradu "Dallas"'
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  sendQuery();
+                }
+              }}
               className="w-full p-2 border bg-[#f9f9f9] border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a4ccd9]"
             />
             <button
@@ -158,7 +178,11 @@ function App() {
                     <div className="border-t my-6 border-gray-300" />
                   </div>
                 )}
-                {data ? (
+                {errorMessage ? (
+                  <div className="text-xl text-center font-medium">
+                    {errorMessage}
+                  </div>
+                ) : data ? (
                   <>
                     <div>Posljednji SQL upit generiran AI-jem: {sqlQuery}</div>
                     <div className="border-t my-6 border-gray-300" />
