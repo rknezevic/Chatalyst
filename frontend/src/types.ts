@@ -1,9 +1,12 @@
-export interface DataEntry {
-  label: string;
-  value: number;
+export type DataEntry = Record<string, string | number>;
+
+
+export interface ChatHistory {
+  initialQuery: string;
+  entries: HistoryEntry[];
 }
 
-export type ViewType = "text" | "table" | "bar" | "pie" | "line";
+export type ViewType = "TABLE" | "BAR" | "PIE" | "LINE";
 
 export interface HistoryEntry {
   query: string;
@@ -11,4 +14,5 @@ export interface HistoryEntry {
   data: DataEntry[] | null;
   type: ViewType;
   conversationId: string | null;
+  sqlQuery: string | null;
 }

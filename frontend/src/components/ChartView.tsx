@@ -29,12 +29,20 @@ interface ChartViewProps {
 }
 
 export const ChartView = ({ data, type }: ChartViewProps) => {
+  if (!data || data.length === 0) return null;
+
+  const keys = Object.keys(data[0]);
+  const labelKey = keys[0];
+  const valueKey = keys[1];
+
   const chartData = {
-    labels: data.map((d) => d.label),
+    labels: data.map((d) => String(d[labelKey])),
     datasets: [
       {
         label: "Vrijednost",
-        data: data.map((d) => d.value),
+        data: data.map((d) =>
+          typeof d[valueKey] === "number" ? (d[valueKey] as number) : 0
+        ),
         backgroundColor: ["#FCEF91", "#FB9E3A", "#E6521F", "#ea1414ff"],
       },
     ],
@@ -42,20 +50,23 @@ export const ChartView = ({ data, type }: ChartViewProps) => {
 
   return (
     <div className="w-full h-64">
-      {type === "bar" ? (
-        <Bar
-          data={chartData}
-          options={{
-            maintainAspectRatio: false,
-            responsive: true,
-            plugins: {
-              legend: {
-                display: false,
+      {type === "BAR" ? (
+        <>
+          <div className="text-sm text-gray-500">{valueKey}</div>
+          <Bar
+            data={chartData}
+            options={{
+              maintainAspectRatio: false,
+              responsive: true,
+              plugins: {
+                legend: {
+                  display: false,
+                },
               },
-            },
-          }}
-        />
-      ) : type === "pie" ? (
+            }}
+          />
+        </>
+      ) : type === "PIE" ? (
         <Pie
           data={chartData}
           options={{
@@ -70,30 +81,33 @@ export const ChartView = ({ data, type }: ChartViewProps) => {
           }}
         />
       ) : (
-        <Line
-          data={chartData}
-          options={{
-            maintainAspectRatio: false,
-            responsive: true,
-            elements: {
-              line: {
-                tension: 0.1,
-                borderWidth: 3,
+        <>
+          <div className="text-sm text-gray-500">{valueKey}</div>
+          <Line
+            data={chartData}
+            options={{
+              maintainAspectRatio: false,
+              responsive: true,
+              elements: {
+                line: {
+                  tension: 0.1,
+                  borderWidth: 3,
+                },
+                point: {
+                  radius: 5,
+                  hoverRadius: 7,
+                  borderWidth: 1,
+                  borderColor: "#000",
+                },
               },
-              point: {
-                radius: 5,
-                hoverRadius: 7,
-                borderWidth: 1,
-                borderColor: "#000",
+              plugins: {
+                legend: {
+                  display: false,
+                },
               },
-            },
-            plugins: {
-              legend: {
-                display: false,
-              },
-            },
-          }}
-        />
+            }}
+          />
+        </>
       )}
     </div>
   );

@@ -1,36 +1,75 @@
 import { useState } from "react";
-import type { DataEntry, HistoryEntry } from "./types";
+import type { DataEntry, HistoryEntry, ChatHistory, ViewType } from "./types";
 import { ChartView } from "./components/ChartView";
 import { TableView } from "./components/TableView";
 
 function App() {
   const [query, setQuery] = useState<string>("");
   const [activeQuery, setActiveQuery] = useState<string>("");
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [history, setHistory] = useState<ChatHistory[]>([]);
   const [data, setData] = useState<DataEntry[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [firstQueryInChat, setfirstQueryInChat] = useState(true);
   const [convId, setConvId] = useState<string | null>(null);
+  const [sqlQuery, setSqlQuery] = useState<string>("");
 
   const sendQuery = async () => {
     if (!query) return;
     setActiveQuery(query);
     setIsLoading(true);
+
     try {
-      const response = await fetch("http://localhost:3000/salaries");
+      /*const response = await fetch("/api/chat-with-memory", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          input: query,
+          conversationId: convId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }*/
+
+      const response = await fetch("http://localhost:3000/chatResponse");
       const json = await response.json();
-      setData(json);
-      const now = new Date();
-      const entry: HistoryEntry = {
+
+      const newEntry: HistoryEntry = {
         query,
-        time: now,
-        data: json,
-        type: "bar",
-        conversationId: convId,
+        time: new Date(),
+        data: json.data,
+        type: json.llmrEsponse.chartTypea as ViewType,
+        conversationId: json.conversationId ?? convId,
+        sqlQuery: json.llmrEsponse.sqlQuery ?? null,
       };
-      {
-        firstQueryInChat && setHistory((prev) => [entry, ...prev]);
-      }
+
+      setData(json.data);
+      setSqlQuery(json.llmrEsponse.sqlQuery);
+      setConvId(json.conversationId ?? convId);
+
+      setHistory((prev) => {
+        if (firstQueryInChat || prev.length === 0) {
+          return [
+            {
+              initialQuery: query,
+              entries: [newEntry],
+            },
+            ...prev,
+          ];
+        } else {
+          const [latestChat, ...rest] = prev;
+          return [
+            {
+              ...latestChat,
+              entries: [...latestChat.entries, newEntry],
+            },
+            ...rest,
+          ];
+        }
+      });
       setfirstQueryInChat(false);
     } catch (err) {
       console.error("Error getting data:", err);
@@ -43,13 +82,19 @@ function App() {
     setQuery("");
     setActiveQuery("");
     setData(null);
+    setSqlQuery("");
     setfirstQueryInChat(true);
+    setConvId(null);
   };
 
-  const historyClicked = (entry: HistoryEntry) => {
-    setActiveQuery(entry.query);
-    setQuery(entry.query);
-    setData(entry.data);
+  const historyClicked = (chat: ChatHistory) => {
+    const lastEntry = chat.entries[chat.entries.length - 1];
+
+    setQuery(lastEntry.query);
+    setActiveQuery(lastEntry.query);
+    setData(lastEntry.data);
+    setSqlQuery(lastEntry.sqlQuery ?? "");
+    setConvId(lastEntry.conversationId);
     setfirstQueryInChat(false);
   };
 
@@ -100,17 +145,15 @@ function App() {
                 )}
                 {data ? (
                   <>
-                    <div>Response from AI: </div>
+                    <div>Last SQL Query recommended by AI: {sqlQuery}</div>
                     <div className="border-t my-6 border-gray-300" />
                     <TableView data={data} />
                     <div className="border-t my-6 border-gray-300" />
-                    <div className="text-sm text-gray-500">Vrijednost</div>
-                    <ChartView data={data} type="bar" />
+                    <ChartView data={data} type="BAR" />
                     <div className="border-t my-6 border-gray-300" />
-                    <ChartView data={data} type="pie" />
+                    <ChartView data={data} type="PIE" />
                     <div className="border-t my-6 border-gray-300" />
-                    <div className="text-sm text-gray-500">Vrijednost</div>
-                    <ChartView data={data} type="line" />
+                    <ChartView data={data} type="LINE" />
                   </>
                 ) : (
                   <div className="text-xl">
@@ -133,15 +176,15 @@ function App() {
           </div>
           <div className="space-y-2">
             {history.length > 0 &&
-              history.map((entry, index) => (
+              history.map((chat, index) => (
                 <div
                   key={index}
-                  onClick={() => historyClicked(entry)}
+                  onClick={() => historyClicked(chat)}
                   className="flex justify-between bg-[#f9f9f9] p-2 rounded shadow text-[#333] cursor-pointer hover:bg-[#f0f0f0] transition"
                 >
-                  <div className="font-medium">{entry.query}</div>
+                  <div className="font-medium">{chat.initialQuery}</div>
                   <div className="text-sm text-gray-500 whitespace-nowrap">
-                    {new Date(entry.time).toLocaleString()}
+                    {new Date(chat.entries[0].time).toLocaleString()}
                   </div>
                 </div>
               ))}
