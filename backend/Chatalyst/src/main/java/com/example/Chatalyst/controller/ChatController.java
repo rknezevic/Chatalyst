@@ -16,12 +16,18 @@ import org.springframework.ai.chat.memory.repository.jdbc.JdbcChatMemoryReposito
 import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.jdbc.BadSqlGrammarException;
+
 
 
 
@@ -93,11 +99,13 @@ Važno:
 - Smijete koristiti isključivo SELECT upite. Nikada nemojte koristiti INSERT, UPDATE, DELETE, DROP ili bilo koji drugi upit koji mijenja podatke u bazi. Ako korisnik zatraži upit koji nije SELECT, postupi isto kao da njegov zahtjev nije dobar.
 - Svaki upit mora biti validan, jednoznačan i jasan.
 - Ne pretpostavljajte nepotrebne informacije – držite se isključivo onoga što korisnik traži.
+- Ako korisnički zahtjev uključuje kolonu ili tablicu koja NE postoji u danoj shemi baze podataka, NEMOJ generirati SQL upit. Umjesto toga, vrati jasnu poruku korisniku poput:
+"Traženi podatak (npr. kolona 'XYZ') ne postoji u dostupnim tablicama pa ne mogu generirati SQL upit."
 
-Baza podataka sadrži 3 tablice. Evo njihove sheme:
+Baza podataka sadrži 3 tablice. Evo njihove sheme (uključujući shemu):
 
 Prva tablica (customers):
-CREATE TABLE osam_ljudi_sedam_laptopa.customerdbo (
+TABLE osam_ljudi_sedam_laptopa.customerdbo (
     individual_id float4 NULL,
     address_id float4 NULL,
     curr_ann_amt float4 NULL,
@@ -111,7 +119,7 @@ CREATE TABLE osam_ljudi_sedam_laptopa.customerdbo (
 );
 
 Druga tablica (addresses):
-CREATE TABLE osam_ljudi_sedam_laptopa.addressdbo (
+TABLE osam_ljudi_sedam_laptopa.addressdbo (
     address_id float4 NULL,
     latitude float4 NULL,
     longitude float4 NULL,
@@ -122,12 +130,12 @@ CREATE TABLE osam_ljudi_sedam_laptopa.addressdbo (
 );
 
 Treća tablica (demographics):
-CREATE TABLE osam_ljudi_sedam_laptopa.demographicdbo (
+TABLE osam_ljudi_sedam_laptopa.demographicdbo (
     individual_id float4 NULL,
     income float4 NULL,
     has_children bool NULL,
     length_of_residence float4 NULL,
-    marital_status varchar(50) NULL,
+    martial_status varchar(50) NULL, -- vrijednosti: Married ili Single ili UNKNOWN
     home_owner bool NULL,
     college_degree bool NULL,
     good_credit bool NULL,
@@ -153,6 +161,7 @@ Ne smijete pokušavati generirati SQL upit ako nema konkretnog zahtjeva za podat
 """)
 
 
+
                     .advisors(new SimpleLoggerAdvisor())
                     .user(body.getInput())
                     .call()
@@ -162,12 +171,19 @@ Ne smijete pokušavati generirati SQL upit ako nema konkretnog zahtjeva za podat
             String sql = respone.getSqlQuery();
             List<Map<String, Object>> result = List.of(); // prazna lista
 
-            if (sql != null && !sql.isBlank()) {
-                if (!sql.trim().toLowerCase().startsWith("select"))
-                    throw new IllegalArgumentException("Dozvoljeni su samo SELECT upiti.");
+            try {
+                if (sql != null && !sql.isBlank()) {
+                    if (!sql.trim().toLowerCase().startsWith("select"))
+                        throw new IllegalArgumentException("Dozvoljeni su samo SELECT upiti.");
 
-                result = jdbcTemplate.queryForList(sql);
+                    result = jdbcTemplate.queryForList(sql);
+                }
+            } catch (BadSqlGrammarException e) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "Upit nije moguće izvršiti jer sadrži nepostojeću tablicu ili kolonu.", e);
             }
+
+
 
             return new ChatWithDataResponse(respone, result, body.conversationId);
 
