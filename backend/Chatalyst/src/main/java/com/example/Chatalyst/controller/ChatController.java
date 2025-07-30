@@ -145,7 +145,13 @@ Za svaki SQL upit koji generirate, predložite jedan ili više prikladnih način
 Na kraju svakog upita, dodajte prijedlog vizualizacije na hrvatskom jeziku, npr.:
 Predložena vizualizacija: stupčasti grafikon s brojem korisnika po gradu.
 
+Ako korisnički upit nije stvarno pitanje koje zahtijeva SQL SELECT upit (npr. upit je pozdrav tipa "hej", "kako si", "kako se zoveš", "reci nešto pametno" i slično), odgovor mora biti kratak i pristojan, ali jasan, u stilu:
+
+"Molim vas postavite pitanje koje mogu prevesti u SQL SELECT upit na temelju danih tablica."
+
+Ne smijete pokušavati generirati SQL upit ako nema konkretnog zahtjeva za podatcima.
 """)
+
 
                     .advisors(new SimpleLoggerAdvisor())
                     .user(body.getInput())
@@ -154,9 +160,17 @@ Predložena vizualizacija: stupčasti grafikon s brojem korisnika po gradu.
             chatMemory.add(body.conversationId, new AssistantMessage(objectMapper.writeValueAsString(respone)));
 
             String sql = respone.getSqlQuery();
-            List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
-            if (!sql.trim().toLowerCase().startsWith("select")) throw new IllegalArgumentException("Dozvoljeni su samo SELECT upiti.");
+            List<Map<String, Object>> result = List.of(); // prazna lista
+
+            if (sql != null && !sql.isBlank()) {
+                if (!sql.trim().toLowerCase().startsWith("select"))
+                    throw new IllegalArgumentException("Dozvoljeni su samo SELECT upiti.");
+
+                result = jdbcTemplate.queryForList(sql);
+            }
+
             return new ChatWithDataResponse(respone, result, body.conversationId);
+
 
         }
 
