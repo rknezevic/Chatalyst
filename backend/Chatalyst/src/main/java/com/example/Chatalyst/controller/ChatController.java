@@ -1,5 +1,6 @@
 package com.example.Chatalyst.controller;
 
+import com.example.Chatalyst.model.DateTimeTools;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpSession;
@@ -204,6 +205,7 @@ Ne smijete pokušavati generirati SQL upit ako nema konkretnog zahtjeva za podat
 
                     .advisors(new SimpleLoggerAdvisor())
                     .user(body.getInput())
+                    .tools(new DateTimeTools())
                     .call()
                     .entity(LLMREsponse.class);
             chatMemory.add(body.conversationId, new AssistantMessage(objectMapper.writeValueAsString(respone)));
