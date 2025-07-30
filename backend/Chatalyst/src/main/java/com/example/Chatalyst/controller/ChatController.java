@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -46,7 +48,9 @@ import java.util.UUID;
 
         private final ObjectMapper objectMapper;
 
-        @Autowired
+
+
+    @Autowired
         private JdbcTemplate jdbcTemplate;
 
         public ChatController(ChatClient.Builder chatClientBuilder, ChatMemory chatMemory, ObjectMapper objectMapper) {
@@ -77,6 +81,7 @@ import java.util.UUID;
         @PostMapping("/chat-with-memory")
         public ChatWithDataResponse chatWithMemory(@RequestBody ChatWithMemoryRequest body) {
 
+
             if (body.conversationId == null)  {
                 body.setConversationId(UUID.randomUUID().toString());
             }
@@ -101,6 +106,7 @@ Važno:
 - Ne pretpostavljajte nepotrebne informacije – držite se isključivo onoga što korisnik traži.
 - Ako korisnički zahtjev uključuje kolonu ili tablicu koja NE postoji u danoj shemi baze podataka, NEMOJ generirati SQL upit. Umjesto toga, vrati jasnu poruku korisniku poput:
 "Traženi podatak (npr. kolona 'XYZ') ne postoji u dostupnim tablicama pa ne mogu generirati SQL upit."
+- Ako korisnik zatraži prevelik broj podataka, promijeni LIMIT odgovora na 500
 
 Baza podataka sadrži 3 tablice. Evo njihove sheme (uključujući shemu):
 
@@ -173,8 +179,28 @@ Ne smijete pokušavati generirati SQL upit ako nema konkretnog zahtjeva za podat
 
             try {
                 if (sql != null && !sql.isBlank()) {
-                    if (!sql.trim().toLowerCase().startsWith("select"))
-                        throw new IllegalArgumentException("Dozvoljeni su samo SELECT upiti.");
+                    if (!sql.toUpperCase().contains("LIMIT")) {
+                        sql = sql.trim().replaceAll(";", "") + " LIMIT 500;";
+                    } else {
+                        sql = sql.trim().replaceAll(";", "");
+                        int limitIndex = sql.toUpperCase().indexOf("LIMIT") + 5;
+                        String afterLimit = sql.substring(limitIndex).trim();
+                        int limitPart;
+
+                        try {
+                            limitPart = Integer.parseInt(afterLimit.split("\\s+")[0]);
+                        } catch (NumberFormatException e) {
+                            // fallback ako AI generira npr. "LIMIT xyz"
+                            limitPart = 9999;
+                        }
+
+                        if (limitPart > 500) {
+                            sql = sql.substring(0, sql.toUpperCase().indexOf("LIMIT")) + "LIMIT 500;";
+                        } else {
+                            sql += ";";
+                        }
+                    }
+
 
                     result = jdbcTemplate.queryForList(sql);
                 }
@@ -183,6 +209,7 @@ Ne smijete pokušavati generirati SQL upit ako nema konkretnog zahtjeva za podat
                         "Upit nije moguće izvršiti jer sadrži nepostojeću tablicu ili kolonu.", e);
             }
 
+            System.out.println("UPITT " + sql);
 
 
             return new ChatWithDataResponse(respone, result, body.conversationId);
