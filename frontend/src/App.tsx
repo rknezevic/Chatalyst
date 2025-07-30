@@ -12,6 +12,7 @@ function App() {
   const [firstQueryInChat, setfirstQueryInChat] = useState(true);
   const [convId, setConvId] = useState<string | null>(null);
   const [sqlQuery, setSqlQuery] = useState<string>("");
+  const [viewType, setViewType] = useState<ViewType>("TABLE");
 
   const sendQuery = async () => {
     if (!query) return;
@@ -19,23 +20,26 @@ function App() {
     setIsLoading(true);
 
     try {
-      /*const response = await fetch("/api/chat-with-memory", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          input: query,
-          conversationId: convId,
-        }),
-      });
+      const response = await fetch(
+        "http://localhost:8080/api/chat-with-memory",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            input: query,
+            conversationId: convId,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error ${response.status}`);
-      }*/
+      }
 
-      const response = await fetch("http://localhost:3000/chatResponse");
       const json = await response.json();
+      console.log(json);
 
       const newEntry: HistoryEntry = {
         query,
@@ -49,6 +53,7 @@ function App() {
       setData(json.data);
       setSqlQuery(json.llmrEsponse.sqlQuery);
       setConvId(json.conversationId ?? convId);
+      setViewType(json.llmrEsponse.chartType);
 
       setHistory((prev) => {
         if (firstQueryInChat || prev.length === 0) {
@@ -95,6 +100,7 @@ function App() {
     setData(lastEntry.data);
     setSqlQuery(lastEntry.sqlQuery ?? "");
     setConvId(lastEntry.conversationId);
+    setViewType(lastEntry.type);
     setfirstQueryInChat(false);
   };
 
@@ -147,13 +153,11 @@ function App() {
                   <>
                     <div>Last SQL Query recommended by AI: {sqlQuery}</div>
                     <div className="border-t my-6 border-gray-300" />
-                    <TableView data={data} />
-                    <div className="border-t my-6 border-gray-300" />
-                    <ChartView data={data} type="BAR" />
-                    <div className="border-t my-6 border-gray-300" />
-                    <ChartView data={data} type="PIE" />
-                    <div className="border-t my-6 border-gray-300" />
-                    <ChartView data={data} type="LINE" />
+                    {viewType === "TABLE" ? (
+                      <TableView data={data} />
+                    ) : (
+                      <ChartView data={data} type={viewType} />
+                    )}
                   </>
                 ) : (
                   <div className="text-xl">
