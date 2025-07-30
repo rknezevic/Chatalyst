@@ -10,4 +10,5 @@ export interface HistoryEntry {
   time: Date;
   data: DataEntry[] | null;
   type: ViewType;
+  conversationId: string | null;
 }

@@ -10,35 +10,33 @@ function App() {
   const [data, setData] = useState<DataEntry[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [firstQueryInChat, setfirstQueryInChat] = useState(true);
+  const [convId, setConvId] = useState<string | null>(null);
 
-  const handleShow = async () => {
+  const sendQuery = async () => {
+    if (!query) return;
+    setActiveQuery(query);
     setIsLoading(true);
     try {
       const response = await fetch("http://localhost:3000/salaries");
       const json = await response.json();
       setData(json);
+      const now = new Date();
+      const entry: HistoryEntry = {
+        query,
+        time: now,
+        data: json,
+        type: "bar",
+        conversationId: convId,
+      };
+      {
+        firstQueryInChat && setHistory((prev) => [entry, ...prev]);
+      }
+      setfirstQueryInChat(false);
     } catch (err) {
       console.error("Error getting data:", err);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const sendQuery = async () => {
-    if (!query) return;
-    const now = new Date();
-    const entry: HistoryEntry = {
-      query,
-      time: now,
-      data: data,
-      type: "bar",
-    };
-    setActiveQuery(query);
-    {
-      firstQueryInChat && setHistory((prev) => [entry, ...prev]);
-    }
-    setfirstQueryInChat(false);
-    await handleShow();
   };
 
   const newQuery = async () => {
@@ -48,11 +46,11 @@ function App() {
     setfirstQueryInChat(true);
   };
 
-  const historyClicked = async (q: string) => {
-    setActiveQuery(q);
-    setQuery(q);
+  const historyClicked = (entry: HistoryEntry) => {
+    setActiveQuery(entry.query);
+    setQuery(entry.query);
+    setData(entry.data);
     setfirstQueryInChat(false);
-    await handleShow();
   };
 
   const clearHistory = () => {
@@ -106,10 +104,12 @@ function App() {
                     <div className="border-t my-6 border-gray-300" />
                     <TableView data={data} />
                     <div className="border-t my-6 border-gray-300" />
+                    <div className="text-sm text-gray-500">Vrijednost</div>
                     <ChartView data={data} type="bar" />
                     <div className="border-t my-6 border-gray-300" />
                     <ChartView data={data} type="pie" />
                     <div className="border-t my-6 border-gray-300" />
+                    <div className="text-sm text-gray-500">Vrijednost</div>
                     <ChartView data={data} type="line" />
                   </>
                 ) : (
@@ -136,7 +136,7 @@ function App() {
               history.map((entry, index) => (
                 <div
                   key={index}
-                  onClick={() => historyClicked(entry.query)}
+                  onClick={() => historyClicked(entry)}
                   className="flex justify-between bg-[#f9f9f9] p-2 rounded shadow text-[#333] cursor-pointer hover:bg-[#f0f0f0] transition"
                 >
                   <div className="font-medium">{entry.query}</div>
