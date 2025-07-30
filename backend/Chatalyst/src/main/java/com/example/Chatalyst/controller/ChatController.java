@@ -116,15 +116,15 @@ Baza podataka sadrži 3 tablice. Evo njihove sheme (uključujući shemu):
 
 Prva tablica (customers):
 TABLE osam_ljudi_sedam_laptopa.customerdbo (
-    individual_id float4 NULL,
-    address_id float4 NULL,
-    curr_ann_amt float4 NULL,
+    individual_id int8 NULL,
+    address_id int8 NULL,
+    curr_ann_amt int8 NULL,
     days_tenure int4 NULL,
-    cust_orig_date varchar(50) NULL,
+    cust_orig_date date NULL,
     age_in_years int4 NULL,
-    date_of_birth varchar(50) NULL,
+    date_of_birth date NULL,
     social_security_number varchar(50) NULL,
-    acct_suspd_date varchar(50) NULL,
+    acct_suspd_date date NULL,
     churn bool NULL
 );
 
@@ -138,7 +138,7 @@ primjer podataka za customersdbo:
 
 Druga tablica (addresses):
 TABLE osam_ljudi_sedam_laptopa.addressdbo (
-    address_id float4 NULL,
+    address_id int8 NULL,
     latitude float4 NULL,
     longitude float4 NULL,
     street_address varchar(50) NULL,
@@ -161,7 +161,7 @@ primjer podataka za addressdbo:
 
 Treća tablica (demographics):
 TABLE osam_ljudi_sedam_laptopa.demographicdbo (
-    individual_id float4 NULL,
+    individual_id int8 NULL,
     income float4 NULL,
     has_children bool NULL,
     length_of_residence float4 NULL,
@@ -169,8 +169,8 @@ TABLE osam_ljudi_sedam_laptopa.demographicdbo (
     home_owner bool NULL,
     college_degree bool NULL,
     good_credit bool NULL,
-    home_market_value_min int4 NULL,
-    home_market_value_max int4 NULL
+    home_market_value_min float4 NULL,
+    home_market_value_max float4 NULL
 );
 
 
@@ -201,6 +201,7 @@ Ako korisnički upit nije stvarno pitanje koje zahtijeva SQL SELECT upit (npr. u
 "Molim vas postavite pitanje koje mogu prevesti u SQL SELECT upit na temelju danih tablica."
 
 Ne smijete pokušavati generirati SQL upit ako nema konkretnog zahtjeva za podatcima.
+
 """)
 
 
@@ -213,6 +214,7 @@ Ne smijete pokušavati generirati SQL upit ako nema konkretnog zahtjeva za podat
             chatMemory.add(body.conversationId, new AssistantMessage(objectMapper.writeValueAsString(respone)));
 
             String sql = respone.getSqlQuery();
+
             List<Map<String, Object>> result = List.of(); // prazna lista
 
             try {
@@ -243,8 +245,10 @@ Ne smijete pokušavati generirati SQL upit ako nema konkretnog zahtjeva za podat
                     result = jdbcTemplate.queryForList(sql);
                 }
             } catch (BadSqlGrammarException e) {
+                System.out.println("UPITT " + sql);
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Upit nije moguće izvršiti jer sadrži nepostojeću tablicu ili kolonu.", e);
+
             }
 
             System.out.println("UPITT " + sql);
