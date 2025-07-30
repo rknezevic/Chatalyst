@@ -108,6 +108,7 @@ Važno:
 - Ne pretpostavljajte nepotrebne informacije – držite se isključivo onoga što korisnik traži.
 - Ako korisnički zahtjev uključuje kolonu ili tablicu koja NE postoji u danoj shemi baze podataka, NEMOJ generirati SQL upit. Umjesto toga, vrati jasnu poruku korisniku poput:
 "Traženi podatak (npr. kolona 'XYZ') ne postoji u dostupnim tablicama pa ne mogu generirati SQL upit."
+- Ako korisnikov upit nije potpun npr; 'daj mi sve podatke' nemoj generirati sql upit nego vrati poruku 'Upit nije potpun.'
 - Ako korisnik zatraži prevelik broj podataka, promijeni LIMIT odgovora na 500
 
 Baza podataka sadrži 3 tablice. Evo njihove sheme (uključujući shemu):
@@ -126,6 +127,14 @@ TABLE osam_ljudi_sedam_laptopa.customerdbo (
     churn bool NULL
 );
 
+primjer podataka za customersdbo:
+221302190038	521300791513	1200.5493	6291	2005-09-11	54	1968-01-25	794-XX-5308	2022-07-20	true
+221301388953	521300506253	1162.3987	6291	2005-09-11	63	1958-12-29	581-XX-7606	2022-11-15	true
+221300599064	521300221962	1292.3265	6291	2005-09-11	59	1963-10-28	107-XX-5224	2022-05-26	true
+221302148321	521300776813	649.1104	1555	2018-08-30	46	1976-08-24	261-XX-2740	2022-02-23	true
+221303281021	521301510584	877.5463	6291	2005-09-11	50	1972-09-25	187-XX-3457	2022-11-27	true
+221302083391	521300753252	1012.3374	80	2022-09-13	55	1967-07-07	657-XX-4648	2022-08-23	true
+
 Druga tablica (addresses):
 TABLE osam_ljudi_sedam_laptopa.addressdbo (
     address_id float4 NULL,
@@ -136,6 +145,18 @@ TABLE osam_ljudi_sedam_laptopa.addressdbo (
     state varchar(50) NULL,
     county varchar(50) NULL
 );
+
+primjer podataka za addressdbo:
+521301086809	32.315804	-96.6279	8457 Wright Mountains Apt. 377	Ennis	TX	Ellis
+521300039185			082 Cline Mountains Apt. 353	Irving	TX	Dallas
+521300239034	32.80629	-96.779854	457 John Mills	Dallas	TX	Dallas
+521301307921	32.825737	-96.93969	5726 Barnett Meadow	Irving	TX	Dallas
+521300970034	32.86719	-96.71555	050 Nicholas Views	Dallas	TX	Dallas
+521301487164	33.055527	-96.70529	207 Rebecca Brook	Plano	TX	Collin
+521300610942	33.406006	-96.966034	9983 Jesse Landing	Pilot Point	TX	Denton
+521300852902	32.892216	-97.08318	76627 Waters Estate Apt. 016	Grapevine	TX	Tarrant
+521300082471	32.858974	-96.64946	378 Anderson Manors Suite 859	Dallas	TX	Dallas
+521301378311	32.982513	-96.575035	12710 Vanessa Rest	Sachse	TX	Dallas
 
 Treća tablica (demographics):
 TABLE osam_ljudi_sedam_laptopa.demographicdbo (
@@ -150,6 +171,19 @@ TABLE osam_ljudi_sedam_laptopa.demographicdbo (
     home_market_value_min int4 NULL,
     home_market_value_max int4 NULL
 );
+
+
+primjer podataka za demographicdbo:
+221302803089	125000.0	true	8.0	Single	true	true	true	300000.0	349999.0
+221303165601	42500.0	false	0.0	Single	false	false	false		
+221303160257	27500.0	false	15.0	Married	true	false	true	75000.0	99999.0
+221303153810	80372.18	false	0.0	UNKNOWN	true	false	false	1000.0	24999.0
+221303153255	125000.0	false	0.0	UNKNOWN	false	false	true		
+221303149860	70000.0	true	14.0	Married	true	false	true	100000.0	124999.0
+221303145066	87500.0	true	3.0	Single	true	false	true	75000.0	99999.0
+221303141057	62500.0	true	5.0	Married	true	false	true	50000.0	74999.0
+221303155883	125000.0	false	3.0	Married	true	true	true	75000.0	99999.0
+221303150302	42500.0	true	5.0	UNKNOWN	false	true	true	75000.0	99999.0
 
 graph (vizualizacija rezultata):
 Za svaki SQL upit koji generirate, predložite jedan ili više prikladnih načina kako vizualno prikazati dobivene podatke. Primjeri:
