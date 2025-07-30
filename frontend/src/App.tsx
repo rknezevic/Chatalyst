@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { DataEntry, HistoryEntry, ChatHistory, ViewType } from "./types";
 import { ChartView } from "./components/ChartView";
 import { TableView } from "./components/TableView";
@@ -45,7 +45,7 @@ function App() {
         query,
         time: new Date(),
         data: json.data,
-        type: json.llmrEsponse.chartTypea as ViewType,
+        type: json.llmrEsponse.chartType as ViewType,
         conversationId: json.conversationId ?? convId,
         sqlQuery: json.llmrEsponse.sqlQuery ?? null,
       };
@@ -56,7 +56,7 @@ function App() {
       setViewType(json.llmrEsponse.chartType);
 
       setHistory((prev) => {
-        if (firstQueryInChat || prev.length === 0) {
+        if (firstQueryInChat || !convId || prev.length === 0) {
           return [
             {
               initialQuery: query,
@@ -65,14 +65,18 @@ function App() {
             ...prev,
           ];
         } else {
-          const [latestChat, ...rest] = prev;
-          return [
-            {
-              ...latestChat,
-              entries: [...latestChat.entries, newEntry],
-            },
-            ...rest,
-          ];
+          return prev.map((chat) => {
+            if (
+              chat.entries.length > 0 &&
+              chat.entries[0].conversationId === newEntry.conversationId
+            ) {
+              return {
+                ...chat,
+                entries: [...chat.entries, newEntry],
+              };
+            }
+            return chat;
+          });
         }
       });
       setfirstQueryInChat(false);
@@ -104,8 +108,13 @@ function App() {
     setfirstQueryInChat(false);
   };
 
-  const clearHistory = () => {
+  useEffect(() => {
+    console.log(viewType);
+  }, [viewType]);
+
+  const clearHistory = async () => {
     setHistory([]);
+    await newQuery();
   };
 
   return (
@@ -113,12 +122,12 @@ function App() {
       <div className="min-h-screen bg-[#ebefff] p-6">
         <div className="max-w-6xl mx-auto bg-[#f7f7f7] rounded-2xl shadow-lg p-6">
           <div className="text-3xl font-bold mb-6 text-center text-[#8dbcc7]">
-            Ask about your insurance data
+            Saznajte sve o podacima o osiguranju
           </div>
           <div className="flex gap-4 mb-2">
             <input
               type="text"
-              placeholder="Your query"
+              placeholder="Vaš upit"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full p-2 border bg-[#f9f9f9] border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#a4ccd9]"
@@ -127,7 +136,7 @@ function App() {
               onClick={sendQuery}
               className="bg-[#a4ccd9] text-white px-4 py-2 rounded-md shadow hover:bg-[#8dbcc7] cursor-pointer transition whitespace-nowrap"
             >
-              Send your query
+              Pošaljite upit
             </button>
           </div>
           <div className="flex justify-center mb-2">
@@ -135,23 +144,23 @@ function App() {
               onClick={newQuery}
               className="bg-[#a4ccd9] text-white px-16 py-2 rounded-md shadow hover:bg-[#8dbcc7] cursor-pointer transition"
             >
-              New chat
+              Novi razgovor
             </button>
           </div>
           <div className="bg-[#f3f3f3] p-4 rounded-lg shadow-inner mb-6">
             {isLoading ? (
-              <div className="text-xl text-center">Loading...</div>
+              <div className="text-xl text-center">Učitavanje...</div>
             ) : (
               <>
                 {activeQuery && (
                   <div className="text-xl text-center">
-                    Current query: {activeQuery}
+                    Posljednji upit: {activeQuery}
                     <div className="border-t my-6 border-gray-300" />
                   </div>
                 )}
                 {data ? (
                   <>
-                    <div>Last SQL Query recommended by AI: {sqlQuery}</div>
+                    <div>Posljednji SQL upit generiran AI-jem: {sqlQuery}</div>
                     <div className="border-t my-6 border-gray-300" />
                     {viewType === "TABLE" ? (
                       <TableView data={data} />
@@ -161,7 +170,7 @@ function App() {
                   </>
                 ) : (
                   <div className="text-xl">
-                    Results of your query will be shown here.
+                    Ovdje će se prikazati rezultati upita.
                   </div>
                 )}
               </>
@@ -169,13 +178,13 @@ function App() {
           </div>
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="text-2xl font-bold text-[#8dbcc7]">
-              Query history
+              Povijest razgovora
             </div>
             <button
               onClick={clearHistory}
               className="text-xl text-red-500 hover:text-red-600 cursor-pointer transition"
             >
-              (clear)
+              (očisti)
             </button>
           </div>
           <div className="space-y-2">
