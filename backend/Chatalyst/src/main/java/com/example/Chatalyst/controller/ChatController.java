@@ -29,10 +29,12 @@ import java.rmi.server.UID;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 
 @RestController
     @RequestMapping("/api")
+@CrossOrigin(origins = "*")
     public class ChatController {
         private final ChatClient chatClient;
 
