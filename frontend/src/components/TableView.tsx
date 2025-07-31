@@ -6,7 +6,7 @@ export const TableView = ({ data }: TableViewProps) => {
   const columns = Object.keys(data[0]).filter((key) => key !== "id");
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
       <table className="min-w-full border border-gray-300 rounded-lg overflow-hidden">
         <thead className="bg-[#a4ccd9] text-gray-800">
           <tr>
